@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://STAR-RG.github.io/sitemap.xml
+Sitemap: https://star-rg.github.io/sitemap.xml
