@@ -8,12 +8,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Read those three before editing anything.** Everything below is Claude-specific or longer-form operational detail that does not belong in the short entry point. Do not restate facts from those files here — link to them.
 
+## This repo is the STAR-RG group site, not upstream al-folio
+
+This repo (`origin` = `STAR-RG/STAR-RG.github.io`) was created from the al-folio template to host the Software Testing and Analysis Research Group website. `AGENTS.md`, `docs/`, and the rest of this file were written for maintainers of the upstream starter. Read them with these differences in mind:
+
+- **Most edits are content.** Group pages, members, publications, news, and projects go in `_pages`, `_data`, `_bibliography`, `_news`, `_projects`, `_posts`, and `assets/img`. The example content inherited from the template should be replaced over time, not maintained.
+- **The stop sign does not apply here.** As a site built from the template, this repo may shadow gem-owned files (`_layouts/`, `_includes/`, `_sass/`). Follow the [local overrides rules](docs/ARCHITECTURE.md#local-overrides-your-site-vs-this-repo): run `bundle exec al-folio upgrade overrides audit` and commit `.al-folio-overrides.yml`. Expect `npm run lint:style-contract` and the `unit-tests.yml` workflow to fail once an override exists. Treat that failure as expected, not as a reason to revert the override.
+- **The baseurl is empty, not `/al-folio`.** An organization site at `https://STAR-RG.github.io` is served from the root, so `_config.yml` sets `baseurl:` blank. AGENTS.md and the integration and visual tests in `test/` still assume `/al-folio`. Ignore that here, and never pass `--baseurl /al-folio`.
+- **Upstream-maintenance tooling matters less here:** visual regression against the `v0.16.3` baseline, `upgrade-check.yml`, `star-history.yml`, `release.yml`, `deploy-image.yml`/`docker-slim.yml`, and `.all-contributorsrc`. Do not spend effort keeping them green unless asked. Never open PRs against `alshedivat/al-folio` from this repo.
+
 ## Daily dev loop
 
 ```bash
 bundle install                                # ruby gems
-bundle exec jekyll serve                      # dev server → http://localhost:4000/al-folio/  (NOTE baseurl)
-bundle exec jekyll build --baseurl /al-folio  # production-style build to _site/
+bundle exec jekyll serve                      # dev server → http://localhost:4000/
+bundle exec jekyll build                      # production-style build to _site/
 bash test/integration_distill.sh              # run ONE integration test (any of the seven in test/)
 npm run test:visual:update                    # refresh playwright snapshots after intentional UI change
 bundle exec al-folio upgrade apply --safe     # deterministic codemods (font-weight-* → font-*, remote→local URLs)
@@ -29,7 +38,7 @@ bundle exec al-folio upgrade overrides diff <path>    # then `overrides accept <
 
 ## Docker serving model (v1-specific)
 
-`docker compose up -d` bind-mounts the repo to `/srv/jekyll` and runs `bin/entry_point.sh`, which serves with `--force_polling --destination /tmp/_site`. The build output deliberately goes to **container-local `/tmp/_site`, not the bind-mounted `_site`** — writing `_site` back across the host bind mount caused write deadlocks. The container also `inotifywait`s `_config.yml` and restarts Jekyll on change (config edits aren't hot-reloaded by `--watch`). Verify with the `/al-folio` baseurl: `curl -fsS http://127.0.0.1:8080/al-folio/`. `docker-compose-slim.yml` pulls a prebuilt `:slim` image instead of building locally.
+`docker compose up -d` bind-mounts the repo to `/srv/jekyll` and runs `bin/entry_point.sh`, which serves with `--force_polling --destination /tmp/_site`. The build output deliberately goes to **container-local `/tmp/_site`, not the bind-mounted `_site`** — writing `_site` back across the host bind mount caused write deadlocks. The container also `inotifywait`s `_config.yml` and restarts Jekyll on change (config edits aren't hot-reloaded by `--watch`). Verify with `curl -fsS http://127.0.0.1:8080/`. `docker-compose-slim.yml` pulls a prebuilt `:slim` image instead of building locally.
 
 ## CI gates and the style contract
 
