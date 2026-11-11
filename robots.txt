@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://STAR-RG.github.io/sitemap.xml
