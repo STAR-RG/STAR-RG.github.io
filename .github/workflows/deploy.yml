@@ -63,7 +63,7 @@ permissions:
 jobs:
   deploy:
     # available images: https://github.com/actions/runner-images#available-images
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout 🛎️
         uses: actions/checkout@v7
@@ -93,7 +93,20 @@ jobs:
           value: ${{ github.repository }}
       - name: Install and Build 🔧
         run: |
-          sudo apt-get update && sudo apt-get install -y imagemagick
+          # Install ImageMagick from its GitHub release instead of apt: the runners
+          # currently cannot resolve the Ubuntu package mirrors.
+          if ! command -v convert >/dev/null; then
+            IM_VERSION=7.1.2-35
+            mkdir -p "$RUNNER_TEMP/imagemagick" && cd "$RUNNER_TEMP/imagemagick"
+            curl -fsSL -o im.AppImage "https://github.com/ImageMagick/ImageMagick/releases/download/${IM_VERSION}/ImageMagick-${IM_VERSION}-gcc-x86_64.AppImage"
+            chmod +x im.AppImage && ./im.AppImage --appimage-extract >/dev/null
+            mkdir -p bin
+            printf '#!/bin/sh\nexec "%s/squashfs-root/AppRun" convert "$@"\n' "$PWD" > bin/convert
+            chmod +x bin/convert
+            export PATH="$PWD/bin:$PATH"
+            cd "$GITHUB_WORKSPACE"
+          fi
+          convert -version
           pip3 install --upgrade nbconvert
           export JEKYLL_ENV=production
           bundle exec jekyll build
